@@ -1,5 +1,6 @@
 FROM python:3.9
 WORKDIR /app
-COPY producer.py .
-RUN pip install kafka-python
+COPY OFS.py producer.py .
+COPY config .
+RUN pip install kafka-python requests
 CMD ["python", "producer.py"]

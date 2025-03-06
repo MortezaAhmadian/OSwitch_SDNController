@@ -1,6 +1,18 @@
 version: '3.8'
 
 services:
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_DB: network_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    networks:
+      - network_auto_net
   # Zookeeper (Required for Kafka)
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -45,17 +57,17 @@ services:
       - "8080:8080"  # Spark Web UI
 
   # Prometheus (Time-Series Database)
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-    ports:
-      - "9090:9090"
-    networks:
-      - network_auto_net
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
+  #   command:
+  #     - "--config.file=/etc/prometheus/prometheus.yml"
+  #   ports:
+  #     - "9090:9090"
+  #   networks:
+  #     - network_auto_net
 
   # Grafana (Data Visualization)
   grafana:
@@ -86,7 +98,7 @@ services:
     image: spark-consumer:latest
     depends_on:
       - kafka
-      - prometheus
+      - postgres
     networks:
       - network_auto_net
     ports:

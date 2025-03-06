@@ -2,17 +2,18 @@ from kafka import KafkaProducer
 import json
 import time
 import random
+from OFS import OFS
 
 producer = KafkaProducer(bootstrap_servers='kafka:9092',
                          value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
 TOPIC = "network_telemetry"
+ofs = OFS()
 
 def generate_telemetry():
     return {
-        "device_id": f"router_{random.randint(1,5)}",
-        "latency": round(random.uniform(1, 100), 2),  # in ms
-        "packet_loss": round(random.uniform(0, 10), 2),  # in percentage
+        "device": "OFS",
+        "existing_cross_conn": ofs.get_existing_cross_connects(),
         "timestamp": time.time()
     }
 
