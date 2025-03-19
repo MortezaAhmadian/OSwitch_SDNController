@@ -1,0 +1,5 @@
+{
+  "device": "WSS_16000A",
+  "ip": "129.16.137.33",
+  "url": "http://{{ip}}/waveshaper/getprofile"
+}

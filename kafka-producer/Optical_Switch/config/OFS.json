@@ -1,0 +1,11 @@
+{
+  "device": "OFS",
+  "namespace": {"ns": "http://www.polatis.com/yang/optical-switch"},
+  "API_URL": "http://129.16.137.36:8008/api/data/optical-switch:cross-connects",
+  "USERNAME": "admin",
+  "PASSWORD": "root",
+  "HEADERS": {
+            "Accept": "application/yang-data+xml",
+            "Content-Type": "application/yang-data+xml"
+        }
+}

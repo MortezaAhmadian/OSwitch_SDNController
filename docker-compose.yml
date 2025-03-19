@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_DB: network_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    networks:
+      - network_auto_net
+  # Zookeeper (Required for Kafka)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - network_auto_net
+
+  # Kafka (Message Broker)
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CREATE_TOPICS: "network_telemetry:1:1"
+    healthcheck:
+      test: [ "CMD", "kafka-topics", "--list", "--bootstrap-server", "localhost:9092" ]
+      interval: 10s
+      retries: 5
+    ports:
+      - "9092:9092"
+    networks:
+      - network_auto_net
+
+  # Spark (Real-time Data Processing)
+  spark:
+    image: bitnami/spark:latest
+    container_name: spark
+    depends_on:
+      - kafka
+    environment:
+      - SPARK_MODE=master
+    networks:
+      - network_auto_net
+    ports:
+      - "8080:8080"  # Spark Web UI
+
+  # Prometheus (Time-Series Database)
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
+  #   command:
+  #     - "--config.file=/etc/prometheus/prometheus.yml"
+  #   ports:
+  #     - "9090:9090"
+  #   networks:
+  #     - network_auto_net
+
+  # Grafana (Data Visualization)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - network_auto_net
+
+  # Kafka Producer (Simulated Network Telemetry)
+  kafka-producer:
+    image: kafka-producer:latest
+    container_name: kafka-producer
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - network_auto_net
+
+  # Spark Streaming Consumer (Real-Time Anomaly Detection)
+  spark-consumer:
+    container_name: spark-consumer
+    image: spark-consumer:latest
+    depends_on:
+      - kafka
+      - postgres
+    networks:
+      - network_auto_net
+    command: >
+      spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0 /app/consumer.py
+
+  spark-worker:
+    image: bitnami/spark:latest
+    container_name: spark-worker
+    depends_on:
+      - spark
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+    networks:
+      - network_auto_net
+
+networks:
+  network_auto_net:
+    driver: bridge
