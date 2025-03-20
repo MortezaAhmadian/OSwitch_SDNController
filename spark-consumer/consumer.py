@@ -27,8 +27,6 @@ df_ofs = spark \
 df_wss = spark.readStream.format("kafka") \
     .option("kafka.bootstrap.servers", "kafka:9092") \
     .option("subscribe", "WSS_16000A_telemetry") \
-    .option("startingOffsets", "latest") \
-    .option("failOnDataLoss", "false") \
     .load()
 
 # Define OFS schema
@@ -92,7 +90,6 @@ def write_ofs_to_postgres(df, epoch_id):
         """)
 
         data = [(row.port_IN, row.port_OUT) for row in df.collect()]
-        print("DEBUG: OFS Rows collected:", data)
         cursor.executemany("INSERT INTO ofs_profile (port1, port2) VALUES (%s, %s)", data)
 
         conn.commit()
@@ -120,7 +117,6 @@ def write_wss_to_postgres(df, epoch_id):
         """)
 
         data = [(row.frequency, row.attenuation, row.phase, row.port_number) for row in df.collect()]
-        print("DEBUG: WSS Rows collected:", data)
         cursor.executemany("INSERT INTO wss16000a_profile (frequency, attenuation, phase, port_number) VALUES (%s, %s, %s, %s)", data)
 
         conn.commit()

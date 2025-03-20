@@ -24,4 +24,4 @@ while True:
     telemetry_data_wss_16000a = retrieve_telemetry('wss16000a')
     producer.send(TOPIC_OFS, telemetry_data_ofs)
     producer.send(TOPIC_WSS_16000A, telemetry_data_wss_16000a)
-    time.sleep(1)  # 1-second interval
+    time.sleep(5)  # 5-second interval
